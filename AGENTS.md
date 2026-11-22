@@ -51,8 +51,11 @@ Produce a complete document, not a fragment. Structure:
       </header>
       <div class="tldr"><strong>In short</strong><p>…</p></div>
       <nav class="toc"><strong>Contents</strong><ol>…</ol></nav>
-      <section class="section" id="…"><h2>…</h2><p>…</p></section>
-      <section class="sources"><h2>Sources</h2><ol>…</ol></section>
+      <section class="section" id="example">
+        <h2 id="example">Section title</h2>
+        <p>…</p>
+      </section>
+      <section class="sources"><h2 id="sources">Sources</h2><ol>…</ol></section>
     </article>
   </main>
   <footer class="footer">…</footer>
@@ -63,9 +66,18 @@ Produce a complete document, not a fragment. Structure:
 `templates/base.html` and `templates/article.html` are the reference layout.
 Copy their structure; fill in the placeholders.
 
-The stylesheet path depends on depth: a category `hobby/cubing/f2l` is three
-levels below the root, so the link is `../../../assets/style.css`. Index links
-follow the same rule.
+The stylesheet path depends on depth. A file lives at
+`content/<category>/<slug>.html`, so the number of `../` segments is one more
+than the number of category segments:
+
+| Category | Stylesheet link |
+|---|---|
+| `inbox` | `../../assets/style.css` |
+| `hobby/cubing` | `../../../assets/style.css` |
+| `hobby/cubing/f2l` | `../../../../assets/style.css` |
+
+Index links follow the same rule: from `content/inbox/x.html`, the root index is
+`../../index.html`.
 
 ## Allowed classes
 
@@ -125,7 +137,9 @@ HTML: entry 1 in the array is `[1]` in the text.
 ## Before you finish
 
 - The two files exist and nothing else changed.
-- Every `<h2>` has an `id` that matches a TOC entry.
+- **Every `<h2>` has an `id` attribute, including Sources, and every TOC link
+  points at one of those ids.** A note without ids is rejected automatically.
 - Every `[n]` citation has a matching source, and every source is cited.
+- The stylesheet link resolves from the article's directory to `assets/style.css`.
 - The document has no `<script>`, no inline styles, and only allowed classes.
 - The stylesheet path resolves for the category depth.

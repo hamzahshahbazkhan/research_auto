@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Why TCP needs a three-way handshake instead of two</title>
+  <meta name="description" content="Why TCP's connection setup cannot be shortened to two messages: initial sequence numbers, old duplicate SYNs, unfinished handshakes, and what TCP Fast Open trades away.">
+  <link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="site-title" href="../../../index.html">Research notes</a>
+      <nav class="site-nav" aria-label="Site">
+        <a href="../../../index.html">All notes</a>
+        <a href="../../../inbox/index.html">Inbox</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="../../../index.html">Index</a> /
+      <a href="../../../computing/index.html">computing</a> /
+      <a href="../../../computing/networking/index.html">networking</a> /
+      Three-way handshake
+    </nav>
+
+    <article class="article">
+      <header class="article-header">
+        <h1>Why TCP needs a three-way handshake instead of two</h1>
+        <p class="meta">
+          <time datetime="2026-11-22">22 November 2026</time>
+          <span>3 min read</span>
+          <a class="tag" href="../../../computing/networking/index.html">computing/networking</a>
+        </p>
+      </header>
+
+      <div class="tldr">
+        <strong>In short</strong>
+        <p>TCP's third message is not a formality. Without it the server cannot
+        confirm that the client received its initial sequence number, and it
+        cannot distinguish a fresh connection request from a delayed copy of an
+        old one. The price is one round trip before any data flows.</p>
+      </div>
+
+      <nav class="toc" aria-label="Contents">
+        <strong>Contents</strong>
+        <ol>
+          <li><a href="#third-message">What the third message establishes</a></li>
+          <li><a href="#old-duplicates">Old duplicates and phantom connections</a></li>
+          <li><a href="#cost">The cost, and attempts to avoid it</a></li>
+        </ol>
+      </nav>
+
+      <section class="section" id="third-message">
+        <h2 id="third-message">What the third message establishes</h2>
+        <p>RFC 9293 splits connection setup into four logical statements: A
+        sends its initial sequence number (ISN) X; B acknowledges X; B sends its
+        ISN Y; A acknowledges Y [1]. The middle two share a single segment, the
+        SYN-ACK, so four statements fit in three messages [1].</p>
+
+        <pre><code>A -&gt; B   SYN      seq=1000
+B -&gt; A   SYN-ACK  seq=7000, ack=1001
+A -&gt; B   ACK      seq=1001, ack=7001</code></pre>
+
+        <p>The numbers follow Dordal's worked example; a SYN occupies one
+        sequence number, so a SYN is acknowledged with ISN+1 [3].</p>
+
+        <p>The asymmetry is the point. The SYN-ACK's acknowledgment field tells
+        A that B received X, but a two-message exchange never tells B that A
+        received Y. A two-message design would have to treat the connection as
+        open at that point, on the strength of a segment it cannot confirm was
+        delivered. In TCP as specified, a lost SYN-ACK leaves B waiting in
+        SYN-RECEIVED while A retransmits or gives up [3]. Dordal says the third
+        message "is an acknowledgment that the server side's SYN response was
+        received correctly"; ESTABLISHED means both sides have confirmed each
+        other's ISNs [3].</p>
+
+        <p>RFC 793 agrees more tersely: the procedure "involves an exchange of
+        three messages", and a connection becomes established "when sequence
+        numbers have been synchronized in both directions" [2].</p>
+      </section>
+
+      <section class="section" id="old-duplicates">
+        <h2 id="old-duplicates">Old duplicates and phantom connections</h2>
+        <p>Sequence numbers alone do not make two messages impossible: the
+        confirmation could ride on the first data segment, and TCP does allow
+        data in the third segment [3]. It still has to arrive before the server
+        commits. The harder problem is knowing which connection a segment
+        belongs to.</p>
+
+        <p>TCP identifies a connection by its socket pair, and pairs are reused,
+        so a SYN from an earlier incarnation can still be in the network. RFC
+        9293 calls this "the principal reason for the three-way handshake": "to
+        prevent old duplicate connection initiations from causing confusion"
+        [1].</p>
+
+        <p>The recovery path shows how the third message earns its keep. A opens
+        a connection with ISN 100; an old duplicate SYN with ISN 90 then reaches
+        B. B cannot tell it is old — the receiver has no way to know unless it
+        remembers the last sequence number used, which is not always possible —
+        so it replies normally, acknowledging 91 [1]. A is in SYN-SENT expecting
+        an acknowledgment of 101, so it sends a reset with sequence number 91,
+        and B returns to LISTEN [1]. The third segment turns a wrong guess into
+        a reset, not a phantom connection.</p>
+
+        <p>With two messages, B would commit state to a connection A never
+        opened and wait for a timeout to clear it. That is why SYN floods are
+        cheap to send and expensive to serve: each unverified SYN can make the
+        server allocate state [3]. Three messages do not prove agreement — RFC
+        9293 concedes that the receiver cannot always tell — but they let each
+        side detect disagreement and abort.</p>
+      </section>
+
+      <section class="section" id="cost">
+        <h2 id="cost">The cost, and attempts to avoid it</h2>
+        <p>The handshake costs a full round trip before data, which matters for
+        short transfers [3]. TCP Fast Open is the Experimental extension that
+        tries to buy that round trip back: it carries data in the SYN and
+        SYN-ACK and "saves up to one full round-trip time" [4]. It does not
+        repeal the reason for the handshake; it accepts the risk. Data in a SYN
+        can be replayed if the SYN is duplicated, so an application that cannot
+        tolerate receiving the same SYN data twice "MUST NOT enable TFO", and
+        implementations must not enable it by default [4].</p>
+
+        <p>Three practical consequences:</p>
+        <ul>
+          <li>In a capture, the third packet's acknowledgment should be the
+          server's ISN plus one; a SYN-ACK with no ACK behind it is an
+          unfinished handshake, not an open connection [3].</li>
+          <li>On a server, the window between SYN-ACK and ACK is where state is
+          held, which SYN cookies and SYN caches are designed to defend [4].</li>
+          <li>For latency, reuse connections first — RFC 7413 recommends it —
+          and reserve TFO for replay-tolerant requests [4].</li>
+        </ul>
+      </section>
+
+      <section class="sources">
+        <h2 id="sources">Sources</h2>
+        <ol>
+          <li class="source"><a href="https://www.rfc-editor.org/rfc/rfc9293.txt">RFC 9293: Transmission Control Protocol (TCP)</a></li>
+          <li class="source"><a href="https://www.rfc-editor.org/rfc/rfc793.txt">RFC 793: Transmission Control Protocol</a></li>
+          <li class="source"><a href="https://intronetworks.cs.luc.edu/current1/mob2/tcp.html">An Introduction to Computer Networks — 12. TCP Transport</a></li>
+          <li class="source"><a href="https://www.rfc-editor.org/rfc/rfc7413.txt">RFC 7413: TCP Fast Open</a></li>
+        </ol>
+      </section>
+    </article>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap">
+      <p>Written and published from a private homelab. Sources are listed with each note.</p>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "title": "Why TCP needs a three-way handshake instead of two",
+  "summary": "A two-message handshake would confirm only one direction of initial sequence numbers and could leave a server holding state for a connection the client never opened. The third message completes both confirmations and gives old duplicate SYNs a way to be rejected.",
+  "category": "computing/networking",
+  "slug": "tcp-three-way-handshake-purpose",
+  "date": "2026-11-22",
+  "words": 680,
+  "sources": [
+    { "title": "RFC 9293: Transmission Control Protocol (TCP)", "url": "https://www.rfc-editor.org/rfc/rfc9293.txt" },
+    { "title": "RFC 793: Transmission Control Protocol", "url": "https://www.rfc-editor.org/rfc/rfc793.txt" },
+    { "title": "An Introduction to Computer Networks — 12. TCP Transport", "url": "https://intronetworks.cs.luc.edu/current1/mob2/tcp.html" },
+    { "title": "RFC 7413: TCP Fast Open", "url": "https://www.rfc-editor.org/rfc/rfc7413.txt" }
+  ],
+  "model": "opencode-go/deepseek-v4.1-flash",
+  "job_id": "09bdd884"
+}

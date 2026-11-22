@@ -1,0 +1,18 @@
+{
+  "title": "Why some languages make data immutable by default, and what it costs",
+  "summary": "Clojure, OCaml, Erlang and Rust make immutability the default for reasons of concurrency and reasoning, then pay for it in allocation, asymptotic behaviour and escape hatches such as transients and mutable fields.",
+  "category": "computing/languages",
+  "slug": "immutable-by-default-cost",
+  "date": "2026-11-22",
+  "words": 660,
+  "sources": [
+    { "title": "Clojure — Rationale", "url": "https://clojure.org/about/rationale" },
+    { "title": "Clojure — Data Structures reference", "url": "https://clojure.org/reference/data_structures" },
+    { "title": "Clojure — Transient Data Structures", "url": "https://clojure.org/reference/transients" },
+    { "title": "The Rust Programming Language — Variables and Mutability", "url": "https://doc.rust-lang.org/book/ch03-01-variables-and-mutability.html" },
+    { "title": "Erlang System Documentation — List Handling", "url": "https://www.erlang.org/doc/system/listhandling.html" },
+    { "title": "Real World OCaml, 2nd edition — A Guided Tour", "url": "https://dev.realworldocaml.org/guided-tour.html" }
+  ],
+  "model": "opencode-go/deepseek-v4.1-flash",
+  "job_id": "787e4821"
+}

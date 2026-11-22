@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Why some languages make data immutable by default, and what it costs</title>
+  <meta name="description" content="The reasoning behind immutable-by-default languages such as Clojure, OCaml, Erlang and Rust, and the allocation, asymptotics and escape hatches that come with it.">
+  <link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="site-title" href="../../../index.html">Research notes</a>
+      <nav class="site-nav" aria-label="Site">
+        <a href="../../../index.html">All notes</a>
+        <a href="../../../inbox/index.html">Inbox</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="../../../index.html">Index</a> /
+      <a href="../../../computing/index.html">computing</a> /
+      <a href="../../../computing/languages/index.html">languages</a> /
+      Immutable by default
+    </nav>
+
+    <article class="article">
+      <header class="article-header">
+        <h1>Why some languages make data immutable by default, and what it costs</h1>
+        <p class="meta">
+          <time datetime="2026-11-22">22 November 2026</time>
+          <span>3 min read</span>
+          <a class="tag" href="../../../computing/languages/index.html">computing/languages</a>
+        </p>
+      </header>
+
+      <div class="tldr">
+        <strong>In short</strong>
+        <p>Clojure, OCaml, Erlang and Rust all make some or all data immutable by
+        default, for two linked reasons: a value nobody can change is safe to
+        share between threads, and it is easier to reason about. The price is
+        allocation on every update, logarithmic instead of constant-time writes,
+        and a second set of escape hatches that each language ends up shipping.</p>
+      </div>
+
+      <nav class="toc" aria-label="Contents">
+        <strong>Contents</strong>
+        <ol>
+          <li><a href="#why-default">Why the default flips</a></li>
+          <li><a href="#what-it-costs">What it costs</a></li>
+          <li><a href="#choosing">Working with the default</a></li>
+        </ol>
+      </nav>
+
+      <section class="section" id="why-default">
+        <h2 id="why-default">Why the default flips</h2>
+        <p>The default is an argument about where bugs come from. Clojure's
+        rationale lists "defaults to immutability" as a design goal and gives the
+        reason plainly: if a data structure <em>can</em> be mutated, it is
+        dangerous to assume it won't be, and mutable stateful objects are hard to
+        understand, test and reason about — a "concurrency disaster" [1].
+        Immutability makes sharing free, because a value handed to another thread
+        cannot change underneath it, so the lock disappears along with the
+        hazard [1].</p>
+
+        <p>A second, quieter motive is value semantics. Clojure's collections are
+        persistent: an "update" returns a new collection that shares most of its
+        structure with the old one, and old versions stay valid [2]. Vector and
+        map access take O(log<sub>32</sub> n) hops rather than O(1), but equality,
+        hashing and caching behave predictably because the value never moves [2].</p>
+
+        <p>Rust starts somewhere else. <code>let x = 5;</code> cannot be
+        reassigned; the compiler rejects a second assignment and suggests
+        <code>mut</code> [4]. The stated aim is safety and easy concurrency, not
+        purity: immutability is a promise the compiler checks for you [4].</p>
+
+        <h3>It is not one claim</h3>
+        <p>The phrase hides real differences. In OCaml, bindings and records are
+        immutable by default, while arrays and <code>ref</code> are mutable and
+        individual record fields opt in with <code>mutable</code> [6]. In Rust,
+        <code>mut</code> is a property of the binding, not of the value [4]. In
+        Clojure there is no assignment at all [1]. So "immutable by default" can
+        mean mutation is impossible, mutation is possible but marked, or the
+        compiler simply asks first — and only the first case forces the runtime
+        to work hard to make updates cheap.</p>
+      </section>
+
+      <section class="section" id="what-it-costs">
+        <h2 id="what-it-costs">What it costs</h2>
+        <p>Every persistent update allocates the nodes on the path it touches;
+        nothing is overwritten in place. Clojure's own documentation concedes the
+        point: "you simply can't get as fast using only pure functions and
+        immutable data" [3]. The same page benchmarks building a one-million-element
+        vector with <code>conj</code> at 8.4 ms and with the transient
+        <code>conj!</code> at 5.5 ms on Java 25 and Clojure 1.12 — a
+        micro-benchmark, but an honest one [3]. Transients exist because copying
+        into a mutable structure and back "involves O(n) copying" [3].</p>
+
+        <p>The sharper cost is asymptotic. Balanced persistent trees give
+        O(log n) update [2], but a linked list gives nothing away: <code>++</code>
+        copies its left argument, so appending at the tail of a growing list
+        costs O(n) per step and O(n²) overall [5].</p>
+
+        <pre><code>%% quadratic: each step copies the whole accumulator
+bad(0, _A, _B, Fibs) -&gt; Fibs;
+bad(N, A, B, Fibs) -&gt; bad(N - 1, B, A + B, Fibs ++ [A]).
+
+%% linear: prepend, then reverse once at the end
+good(0, _A, _B, Fibs) -&gt; lists:reverse(Fibs);
+good(N, A, B, Fibs) -&gt; good(N - 1, B, A + B, [A | Fibs]).</code></pre>
+
+        <p>That is the Erlang efficiency guide's example, trimmed to the two
+        clauses that differ [5]. The third cost is conceptual surface. Transients
+        must be thread-isolated, cannot be aliased, and throw if used after
+        <code>persistent!</code> [3]. OCaml's <code>mutable</code> fields and
+        <code>ref</code> are a separate, imperative corner of the language [6].
+        You pay for the default twice: once at runtime, and once in the rules you
+        must learn to step outside it.</p>
+      </section>
+
+      <section class="section" id="choosing">
+        <h2 id="choosing">Working with the default</h2>
+        <p>Treat the default as a bet about which errors hurt more, then check the
+        bet against the workload:</p>
+        <ul>
+          <li>Data that crosses threads or task boundaries: keep it immutable and
+          copy at the edges.</li>
+          <li>Tight build-up loops: mutate locally and publish an immutable value
+          at the end — the transient pattern [3].</li>
+          <li>Look for tail appends (<code>++</code>, <code>@</code>, repeated
+          concatenation) inside loops; that is where linear code turns
+          quadratic [5][6].</li>
+          <li>Measure before rewriting. The Clojure gap above is roughly 1.5×, on
+          one VM, for one operation [3].</li>
+        </ul>
+      </section>
+
+      <section class="sources">
+        <h2 id="sources">Sources</h2>
+        <ol>
+          <li class="source"><a href="https://clojure.org/about/rationale">Clojure — Rationale</a></li>
+          <li class="source"><a href="https://clojure.org/reference/data_structures">Clojure — Data Structures reference</a></li>
+          <li class="source"><a href="https://clojure.org/reference/transients">Clojure — Transient Data Structures</a></li>
+          <li class="source"><a href="https://doc.rust-lang.org/book/ch03-01-variables-and-mutability.html">The Rust Programming Language — Variables and Mutability</a></li>
+          <li class="source"><a href="https://www.erlang.org/doc/system/listhandling.html">Erlang System Documentation — List Handling</a></li>
+          <li class="source"><a href="https://dev.realworldocaml.org/guided-tour.html">Real World OCaml, 2nd edition — A Guided Tour</a></li>
+        </ol>
+      </section>
+    </article>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap">
+      <p>Written and published from a private homelab. Sources are listed with each note.</p>
+    </div>
+  </footer>
+</body>
+</html>

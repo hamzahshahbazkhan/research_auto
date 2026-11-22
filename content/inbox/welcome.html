@@ -50,19 +50,26 @@
       </nav>
 
       <section class="section" id="layout">
-        <h2>Layout</h2>
+        <h2 id="layout">Layout</h2>
         <p>A note opens with a summary box, then a contents list, then sections
         with headings. The body text is capped at roughly seventy characters per
         line so it stays readable on a phone and on a wide monitor.</p>
         <p>Category paths mirror a folder tree, so <code>hobby/cubing/f2l</code>
         produces a page two levels deep with its own index page above it.</p>
+        <p>Every index page is generated from the note metadata rather than
+        written by hand, so adding a note cannot leave a stale list behind. The
+        same goes for the breadcrumbs: they follow the folder path downwards, so
+        a note is always reachable from the root without knowing its URL.</p>
       </section>
 
       <section class="section" id="citations">
-        <h2>Citations</h2>
+        <h2 id="citations">Citations</h2>
         <p>Claims carry bracketed numbers that resolve to the source list at the
         bottom of the page.<sup>[1]</sup> A source that is not cited is not
         listed, and a citation without a source is a bug.</p>
+        <p>Notes are written from several independent sources rather than one, so
+        disagreements stay visible. Where sources disagree, the note says so
+        instead of picking a side silently.</p>
         <blockquote>
           <p>If a claim cannot be traced to a source, it belongs in a draft, not
           in a published note.</p>

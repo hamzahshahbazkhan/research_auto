@@ -107,11 +107,14 @@ stylesheets. No iframes. No trackers. No `<form>`.
 
 Length targets, set by the job level:
 
-| Level | Words | Sections |
-|---|---|---|
-| shallow | 400–700 | 2–3 |
-| deep | 1200–1800 | 4–6 |
-| verydeep | 2500–3500 | 6–9 |
+| Level | Words | Sections | Sources |
+|---|---|---|---|
+| shallow | 400–700 | 2–3 | 2–4 |
+| deep | 1200–1800 | 4–6 | 5–8 |
+| verydeep | 2500–3500 | 6–9 | 8–12 |
+
+Fetching more sources than the cap does not make a shallow note better; it makes
+it slower. Stop researching once the cap is met and the question is answered.
 
 ## The JSON file
 

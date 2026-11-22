@@ -83,7 +83,8 @@ stylesheets. No iframes. No trackers. No `<form>`.
 
 - Open with a TL;DR of two or three sentences in `.tldr`.
 - Use `<h2>` for top-level sections and `<h3>` for subsections. Never skip a
-  level. Give every `<h2>` an `id` and list it in the TOC.
+  level. Give every `<h2>` an `id`, including Sources, and list the main
+  sections in the TOC.
 - Cite sources inline as `[1]`, `[2]` and repeat the same numbers in `.sources`.
   Every non-obvious claim needs a citation. Never invent a URL.
 - Prefer concrete detail over generic advice. If the sources disagree, say so.

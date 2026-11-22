@@ -1,0 +1,16 @@
+{
+  "title": "Why the sky is blue",
+  "summary": "Rayleigh scattering makes air molecules deflect short wavelengths far more than long ones, so the sky is scattered sunlight with the blue left in. The fourth-power law also explains the violet problem and the pale horizon.",
+  "category": "inbox",
+  "slug": "why-the-sky-is-blue",
+  "date": "2026-11-22",
+  "words": 630,
+  "sources": [
+    { "title": "NASA Space Place — Why Is the Sky Blue?", "url": "https://spaceplace.nasa.gov/blue-sky" },
+    { "title": "Wikipedia — Rayleigh scattering", "url": "https://en.wikipedia.org/wiki/Rayleigh_scattering" },
+    { "title": "NOAA NESDIS — Why Is the Sky Blue?", "url": "https://www.nesdis.noaa.gov/about/k-12-education/atmosphere/why-the-sky-blue" },
+    { "title": "Wikipedia — Diffuse sky radiation", "url": "https://en.wikipedia.org/wiki/Diffuse_sky_radiation" }
+  ],
+  "model": "opencode-go/deepseek-v4.1-flash",
+  "job_id": "716f9438"
+}

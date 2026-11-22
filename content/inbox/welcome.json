@@ -1,0 +1,13 @@
+{
+  "title": "How these notes work",
+  "summary": "A short note that explains the layout, the citation style, and what these pages are for.",
+  "category": "inbox",
+  "slug": "welcome",
+  "date": "2026-11-22",
+  "words": 180,
+  "sources": [
+    { "title": "Example source on editorial typography", "url": "https://example.com/editorial-typography" }
+  ],
+  "model": "hand-written",
+  "job_id": "seed"
+}

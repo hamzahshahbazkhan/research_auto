@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>How these notes work</title>
+  <meta name="description" content="A short note that explains the layout, the citation style, and what these pages are for.">
+  <link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="site-title" href="../../index.html">Research notes</a>
+      <nav class="site-nav" aria-label="Site">
+        <a href="../../index.html">All notes</a>
+        <a href="../../inbox/index.html">Inbox</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="../../index.html">Index</a> / <a href="../../inbox/index.html">inbox</a> / How these notes work
+    </nav>
+
+    <article class="article">
+      <header class="article-header">
+        <h1>How these notes work</h1>
+        <p class="meta">
+          <time datetime="2026-11-22">22 November 2026</time>
+          <span>2 min read</span>
+          <a class="tag" href="../../inbox/index.html">inbox</a>
+        </p>
+      </header>
+
+      <div class="tldr">
+        <strong>In short</strong>
+        <p>Every page is one research note: a short summary, a table of contents,
+        numbered citations, and a plain stylesheet. Notes are generated from a
+        question and published as static files.</p>
+      </div>
+
+      <nav class="toc" aria-label="Contents">
+        <strong>Contents</strong>
+        <ol>
+          <li><a href="#layout">Layout</a></li>
+          <li><a href="#citations">Citations</a></li>
+        </ol>
+      </nav>
+
+      <section class="section" id="layout">
+        <h2>Layout</h2>
+        <p>A note opens with a summary box, then a contents list, then sections
+        with headings. The body text is capped at roughly seventy characters per
+        line so it stays readable on a phone and on a wide monitor.</p>
+        <p>Category paths mirror a folder tree, so <code>hobby/cubing/f2l</code>
+        produces a page two levels deep with its own index page above it.</p>
+      </section>
+
+      <section class="section" id="citations">
+        <h2>Citations</h2>
+        <p>Claims carry bracketed numbers that resolve to the source list at the
+        bottom of the page.<sup>[1]</sup> A source that is not cited is not
+        listed, and a citation without a source is a bug.</p>
+        <blockquote>
+          <p>If a claim cannot be traced to a source, it belongs in a draft, not
+          in a published note.</p>
+        </blockquote>
+      </section>
+
+      <section class="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li class="source"><a href="https://example.com/editorial-typography">Example source on editorial typography</a></li>
+        </ol>
+      </section>
+    </article>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap">
+      <p>Written and published from a private homelab. Sources are listed with each note.</p>
+    </div>
+  </footer>
+</body>
+</html>

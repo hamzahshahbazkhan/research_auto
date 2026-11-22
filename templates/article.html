@@ -1,0 +1,28 @@
+<nav class="breadcrumbs" aria-label="Breadcrumb">{{breadcrumbs}}</nav>
+<article class="article">
+  <header class="article-header">
+    <h1>{{title}}</h1>
+    <p class="meta">
+      <time datetime="{{date}}">{{date}}</time>
+      <span>{{reading_time}}</span>
+      <a class="tag" href="{{root}}{{category}}/index.html">{{category}}</a>
+    </p>
+  </header>
+
+  <div class="tldr">
+    <strong>In short</strong>
+    <p>{{summary}}</p>
+  </div>
+
+  <nav class="toc" aria-label="Contents">
+    <strong>Contents</strong>
+    {{toc}}
+  </nav>
+
+  {{body}}
+
+  <section class="sources">
+    <h2>Sources</h2>
+    <ol>{{sources}}</ol>
+  </section>
+</article>

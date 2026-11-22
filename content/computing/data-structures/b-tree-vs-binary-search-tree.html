@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>B-tree vs binary search tree: where the difference actually shows up</title>
+  <meta name="description" content="A B-tree puts many keys in one node and a binary search tree puts one; that changes tree height, I/O count, split cost and where each structure is used.">
+  <link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="site-title" href="../../../index.html">Research notes</a>
+      <nav class="site-nav" aria-label="Site">
+        <a href="../../../index.html">All notes</a>
+        <a href="../../../inbox/index.html">Inbox</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="../../../index.html">Index</a> /
+      <a href="../../../computing/index.html">computing</a> /
+      <a href="../../../computing/data-structures/index.html">data-structures</a> /
+      B-trees and BSTs
+    </nav>
+
+    <article class="article">
+      <header class="article-header">
+        <h1>B-tree vs binary search tree: where the difference actually shows up</h1>
+        <p class="meta">
+          <time datetime="2026-11-22">22 November 2026</time>
+          <span>3 min read</span>
+          <a class="tag" href="../../../computing/data-structures/index.html">computing/data-structures</a>
+        </p>
+      </header>
+
+      <div class="tldr">
+        <strong>In short</strong>
+        <p>A binary search tree stores one key and two child pointers per node, so its height
+        grows as log<sub>2</sub> n. A B-tree packs many keys and children into one node, so its
+        height grows as log<sub>b</sub> n. For a million keys that is roughly twenty node visits
+        against three, and it changes insert cost, memory use and range scans as well.</p>
+      </div>
+
+      <nav class="toc" aria-label="Contents">
+        <strong>Contents</strong>
+        <ol>
+          <li><a href="#shape">One key per node, or hundreds</a></li>
+          <li><a href="#cost-model">Height is not the point; block reads are</a></li>
+          <li><a href="#choosing">Choosing between them</a></li>
+        </ol>
+      </nav>
+
+      <section class="section" id="shape">
+        <h2 id="shape">One key per node, or hundreds</h2>
+        <p>A binary search tree node holds one key and at most two children, with smaller keys
+        left and larger keys right [2]. A B-tree node holds an ordered array of keys and, for a
+        node with k keys, k+1 subtree pointers; the keys separate the subtrees [1]. In Knuth's
+        definition a B-tree of order m has at most m children per node and all leaves at the same
+        level, so it is balanced by construction rather than by rotations [1].</p>
+
+        <p>The consequence is height. A binary search tree needs about log<sub>2</sub> n
+        comparisons — 20 for a million keys — and an unbalanced one degenerates into a linked
+        list with O(n) search [1][2]. A B-tree needs about log<sub>b</sub> n node visits, where b
+        is the blocking factor; the same million-key example at b = 100 gives 3 reads [1].
+        PostgreSQL's index is the B+ shape: leaf pages hold tuples pointing at table rows,
+        internal pages only downlinks, and "typically, over 99% of all pages are leaf
+        pages" [3]. SQLite uses two variants: table b-trees keep all data in the leaves, index
+        b-trees keep none [4].</p>
+      </section>
+
+      <section class="section" id="cost-model">
+        <h2 id="cost-model">Height is not the point; block reads are</h2>
+        <p>Both structures do O(log n) comparisons; the difference is what one step costs. A
+        B-tree node is sized to a storage block — b is chosen so that a node fits in one block,
+        so an operation costs the number of nodes touched [5]. SQLite pages are powers of two
+        from 512 to 65536 bytes, and every read or write starts on a page boundary [4]. A binary
+        search tree has no such unit: each of its ~20 steps follows a pointer to an arbitrary
+        address, a seek on disk and often a cache miss in memory [1].</p>
+
+        <p>Arithmetic shows the gap. On a 4096-byte page with an 8-byte key and a 4-byte child
+        pointer, about 12 bytes per interior entry means roughly 340 entries per page. Two levels
+        address some 116,000 keys; three address about 39 million. A million keys therefore sit
+        three levels deep, against 20. Real fanout is lower — keys vary in length and leaves hold
+        row pointers [3][4] — but the order of magnitude survives.</p>
+
+        <p>Updates differ too, and here the sources pull apart. A B-tree insert splits a full
+        node and pushes the middle key to the parent, possibly all the way to a new root [1];
+        PostgreSQL describes splits cascading upward recursively [3]. Splits are amortised to a
+        constant per insert, but each moves up to b keys, so Open Data Structures says that in
+        the word-RAM model "adding a value to a B-tree can be much slower than adding into a
+        balanced binary search tree" [5]. The B-tree article counters that fanout still wins in
+        memory because of CPU caches [1]. Both hold: fewer levels means fewer misses, bigger
+        splits mean more copying. Space is the other price — non-root B-tree nodes are only
+        guaranteed to be half full [1].</p>
+      </section>
+
+      <section class="section" id="choosing">
+        <h2 id="choosing">Choosing between them</h2>
+        <p>Choose by storage, not by asymptotics:</p>
+        <ul>
+          <li><strong>Pages or disk.</strong> B-tree or B+ tree; one node read per level is the
+          design goal [1][3].</li>
+          <li><strong>One process's heap, constant comparison.</strong> A balanced BST is a
+          reasonable default. Linux tracks VMAs, timers and epoll entries in red-black
+          trees [6].</li>
+          <li><strong>Ordered scans.</strong> B+ trees link pages at each level, so a range scan
+          walks leaves instead of re-descending from the root per key [1][3].</li>
+          <li><strong>Comparisons only.</strong> Do not expect a B-tree win; its per-node binary
+          search and key-shuffling splits can lose to a red-black tree [5].</li>
+        </ul>
+
+        <p>One caveat: "order" and "leaf" are used inconsistently — an order-3 B-tree may mean
+        six keys or seven [1]. Check the definition before comparing implementations.</p>
+      </section>
+
+      <section class="sources">
+        <h2 id="sources">Sources</h2>
+        <ol>
+          <li class="source"><a href="https://en.wikipedia.org/wiki/B-tree">Wikipedia — B-tree</a></li>
+          <li class="source"><a href="https://en.wikipedia.org/wiki/Binary_search_tree">Wikipedia — Binary search tree</a></li>
+          <li class="source"><a href="https://www.postgresql.org/docs/current/btree.html">PostgreSQL 19 Documentation — 65.1. B-Tree Indexes</a></li>
+          <li class="source"><a href="https://www.sqlite.org/fileformat2.html">SQLite — Database File Format</a></li>
+          <li class="source"><a href="https://opendatastructures.org/ods-java/14_2_B_Trees.html">Open Data Structures — 14.2 B-Trees</a></li>
+          <li class="source"><a href="https://docs.kernel.org/core-api/rbtree.html">The Linux Kernel documentation — Red-black Trees (rbtree) in Linux</a></li>
+        </ol>
+      </section>
+    </article>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap">
+      <p>Written and published from a private homelab. Sources are listed with each note.</p>
+    </div>
+  </footer>
+</body>
+</html>

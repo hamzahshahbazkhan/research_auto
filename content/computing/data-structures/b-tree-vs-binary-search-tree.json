@@ -1,0 +1,18 @@
+{
+  "title": "B-tree vs binary search tree: where the difference actually shows up",
+  "summary": "A B-tree puts many keys and children in each node while a binary search tree puts one, which cuts the number of block reads needed for a million keys from about twenty to three and shifts insert cost, memory use and range scans.",
+  "category": "computing/data-structures",
+  "slug": "b-tree-vs-binary-search-tree",
+  "date": "2026-11-22",
+  "words": 640,
+  "sources": [
+    { "title": "Wikipedia — B-tree", "url": "https://en.wikipedia.org/wiki/B-tree" },
+    { "title": "Wikipedia — Binary search tree", "url": "https://en.wikipedia.org/wiki/Binary_search_tree" },
+    { "title": "PostgreSQL 19 Documentation — 65.1. B-Tree Indexes", "url": "https://www.postgresql.org/docs/current/btree.html" },
+    { "title": "SQLite — Database File Format", "url": "https://www.sqlite.org/fileformat2.html" },
+    { "title": "Open Data Structures — 14.2 B-Trees", "url": "https://opendatastructures.org/ods-java/14_2_B_Trees.html" },
+    { "title": "The Linux Kernel documentation — Red-black Trees (rbtree) in Linux", "url": "https://docs.kernel.org/core-api/rbtree.html" }
+  ],
+  "model": "opencode-go/deepseek-v4.1-flash",
+  "job_id": "39d84338"
+}

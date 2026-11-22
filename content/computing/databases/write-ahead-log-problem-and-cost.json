@@ -1,0 +1,18 @@
+{
+  "title": "What a write-ahead log solves, and what it costs",
+  "summary": "A write-ahead log replaces a scatter of page flushes at commit time with one sequential append and one flush, which is why commits survive power cuts. The price is duplicated writes, a flush on the commit path, and checkpointing that costs disk space and recovery time.",
+  "category": "computing/databases",
+  "slug": "write-ahead-log-problem-and-cost",
+  "date": "2026-11-22",
+  "words": 610,
+  "sources": [
+    { "title": "Wikipedia — Write-ahead logging", "url": "https://en.wikipedia.org/wiki/Write-ahead_logging" },
+    { "title": "SQLite — Atomic Commit In SQLite", "url": "https://www.sqlite.org/atomiccommit.html" },
+    { "title": "PostgreSQL 19 Documentation — 28.3. Write-Ahead Logging (WAL)", "url": "https://www.postgresql.org/docs/current/wal-intro.html" },
+    { "title": "SQLite — Write-Ahead Logging", "url": "https://www.sqlite.org/wal.html" },
+    { "title": "PostgreSQL 19 Documentation — 19.5. Write Ahead Log", "url": "https://www.postgresql.org/docs/current/runtime-config-wal.html" },
+    { "title": "PostgreSQL 19 Documentation — 28.4. Asynchronous Commit", "url": "https://www.postgresql.org/docs/current/wal-async-commit.html" }
+  ],
+  "model": "opencode-go/deepseek-v4.1-flash",
+  "job_id": "6def795c"
+}

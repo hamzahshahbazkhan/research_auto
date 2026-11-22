@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>What a write-ahead log solves, and what it costs</title>
+  <meta name="description" content="A write-ahead log replaces a scatter of page flushes at commit time with one sequential append and one flush. The price is duplicated writes, a latency floor and constant checkpointing.">
+  <link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="site-title" href="../../../index.html">Research notes</a>
+      <nav class="site-nav" aria-label="Site">
+        <a href="../../../index.html">All notes</a>
+        <a href="../../../inbox/index.html">Inbox</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="../../../index.html">Index</a> /
+      <a href="../../../computing/index.html">computing</a> /
+      <a href="../../../computing/databases/index.html">databases</a> /
+      Write-ahead logging
+    </nav>
+
+    <article class="article">
+      <header class="article-header">
+        <h1>What a write-ahead log solves, and what it costs</h1>
+        <p class="meta">
+          <time datetime="2026-11-22">22 November 2026</time>
+          <span>3 min read</span>
+          <a class="tag" href="../../../computing/databases/index.html">computing/databases</a>
+        </p>
+      </header>
+
+      <div class="tldr">
+        <strong>In short</strong>
+        <p>A write-ahead log turns a commit into a sequential append plus one flush, not a scatter of
+        page writes a power cut can tear. That buys atomicity and durability without flushing every
+        dirty page at commit time. The bill is duplicated writes, a flush on the commit path, and
+        checkpointing.</p>
+      </div>
+
+      <nav class="toc" aria-label="Contents">
+        <strong>Contents</strong>
+        <ol>
+          <li><a href="#problem">The problem: a commit is not one write</a></li>
+          <li><a href="#what-it-buys">What the log buys: one append, then replay</a></li>
+          <li><a href="#bill">The bill: twice the bytes and a flush</a></li>
+        </ol>
+      </nav>
+
+      <section class="section" id="problem">
+        <h2 id="problem">The problem: a commit is not one write</h2>
+        <p>WAL is a family of techniques for atomicity and durability: changes are logged to stable
+        storage before they reach the database files [1]. A transaction touches several pages in
+        several files, and hardware cannot switch them all at once. Storage is written in sectors,
+        and SQLite's notes assume a sector write is linear but not atomic: a failure in the middle
+        can leave one page holding old and new bytes mixed [2]. There is no primitive for "all
+        twenty pages or none".</p>
+
+        <p>Without a log, the only way to keep the promise is to force every modified page to
+        stable storage before acknowledging. That means random writes and flushes, and SQLite says
+        those flushes take up most of the time needed to complete a commit [2]. Crash midway and you
+        cannot tell which pages landed, and the old contents are gone.</p>
+      </section>
+
+      <section class="section" id="what-it-buys">
+        <h2 id="what-it-buys">What the log buys: one append, then replay</h2>
+        <p>The commit point becomes the durable log record, and dirty pages can be written whenever
+        convenient. Recovery replays from the last checkpoint, redoing committed work and undoing the
+        rest [1][2]. The log is append-only and sequential, so one flush of one file replaces a
+        scatter of page flushes; PostgreSQL notes that only the WAL file must be flushed to commit,
+        and that syncing it sequentially is cheaper than flushing data pages [3]. When many small
+        transactions commit together, one flush can cover all of them [3]; <code>commit_delay</code>
+        widens that window deliberately [5].</p>
+
+        <p>Take a transaction that updates six table pages and fourteen index pages. Without a log,
+        all twenty random writes must be durable before the client hears "committed". With one, a
+        single record is appended and flushed, the twenty writes follow in checkpoint order, and a
+        crash in between is repaired by replay. The bytes written rose, but the wait collapsed.</p>
+      </section>
+
+      <section class="section" id="bill">
+        <h2 id="bill">The bill: twice the bytes and a flush</h2>
+        <p>First, volume: every change lands in the log now and in the data file at the next
+        checkpoint. SQLite notes a WAL write transaction writes page content once per commit,
+        against twice for a rollback journal [4], but the page is copied back later, so the
+        duplication is deferred, not avoided. PostgreSQL's <code>full_page_writes</code> adds the whole page image on the
+        first change after each checkpoint, because an interrupted page write can be half old and
+        half new; the docs call it "increasing the amount of data that must be written to
+        WAL" [5].</p>
+
+        <p>Latency is the second. Synchronous commit waits for the flush, which for short
+        transactions is "a major component of the total transaction time" [6].
+        <code>synchronous_commit=off</code> returns before the flush, losing at most three times
+        <code>wal_writer_delay</code> of recent transactions — about 600 ms at the 200 ms default —
+        without inconsistency [5][6]. Turning off <code>fsync</code> is worse: it risks unrecoverable
+        corruption [5].</p>
+
+        <p>Housekeeping is the third. WAL grows until a checkpoint, so it costs disk and attention.
+        <code>max_wal_size</code> defaults to 1 GB as a soft limit, and raising it lengthens crash
+        recovery [5]. SQLite checkpoints near 1000 pages and warns that checkpoints need syncs and
+        extra seeking, that readers slow as the WAL grows, and that one long-lived reader can block
+        a checkpoint, letting the file grow without bound [4].</p>
+
+        <p>The knobs:</p>
+        <ul>
+          <li><code>synchronous_commit</code>: <code>on</code> pays a flush per commit;
+          <code>off</code> trades recent transactions for speed [5][6].</li>
+          <li><code>checkpoint_timeout</code> and <code>max_wal_size</code>: longer means less
+          full-page WAL, slower recovery [5].</li>
+          <li><code>PRAGMA synchronous=NORMAL</code>: no per-commit sync; the checkpoint is the
+          only barrier [4].</li>
+        </ul>
+      </section>
+
+      <section class="sources">
+        <h2 id="sources">Sources</h2>
+        <ol>
+          <li class="source"><a href="https://en.wikipedia.org/wiki/Write-ahead_logging">Wikipedia — Write-ahead logging</a></li>
+          <li class="source"><a href="https://www.sqlite.org/atomiccommit.html">SQLite — Atomic Commit In SQLite</a></li>
+          <li class="source"><a href="https://www.postgresql.org/docs/current/wal-intro.html">PostgreSQL 19 Documentation — 28.3. Write-Ahead Logging (WAL)</a></li>
+          <li class="source"><a href="https://www.sqlite.org/wal.html">SQLite — Write-Ahead Logging</a></li>
+          <li class="source"><a href="https://www.postgresql.org/docs/current/runtime-config-wal.html">PostgreSQL 19 Documentation — 19.5. Write Ahead Log</a></li>
+          <li class="source"><a href="https://www.postgresql.org/docs/current/wal-async-commit.html">PostgreSQL 19 Documentation — 28.4. Asynchronous Commit</a></li>
+        </ol>
+      </section>
+    </article>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap">
+      <p>Written and published from a private homelab. Sources are listed with each note.</p>
+    </div>
+  </footer>
+</body>
+</html>

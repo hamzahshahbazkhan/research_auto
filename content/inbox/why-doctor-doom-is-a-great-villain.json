@@ -1,0 +1,16 @@
+{
+  "title": "Why Doctor Doom is a great villain",
+  "summary": "Doctor Doom's origin, armor and defeats all point at one flaw: a brilliant man who cannot accept being wrong. His occasional real victories keep him from being a joke, though the case for him as comics' greatest villain is contested.",
+  "category": "inbox",
+  "slug": "why-doctor-doom-is-a-great-villain",
+  "date": "2026-11-25",
+  "words": 645,
+  "sources": [
+    { "title": "Marvel — Doctor Doom (Victor von Doom) In Comics", "url": "https://www.marvel.com/characters/doctor-doom-victor-von-doom/in-comics" },
+    { "title": "Wikipedia — Doctor Doom", "url": "https://en.wikipedia.org/wiki/Doctor_Doom" },
+    { "title": "CBR — Doctor Doom is Marvel's Greatest Villain", "url": "https://www.cbr.com/doctor-doom-marvels-greatest-villain" },
+    { "title": "CBR — 5 Reasons Dr. Doom Is The Greatest Villain In Comics (& 5 Reasons He's Not)", "url": "https://www.cbr.com/doctor-doom-best-bad-guy-comic-history-not" }
+  ],
+  "model": "opencode-go/deepseek-v4.1-flash",
+  "job_id": "dfea3618"
+}

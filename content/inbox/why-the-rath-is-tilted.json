@@ -1,0 +1,16 @@
+{
+  "title": "Why the rath is tilted",
+  "summary": "The tilted rath is the Rato Machhindranath chariot of Lalitpur: a 60-foot wooden tower on four wheels. Its slender lansi frame can shift or break under the pull, and the 2015 earthquake left it leaning for months.",
+  "category": "inbox",
+  "slug": "why-the-rath-is-tilted",
+  "date": "2026-11-27",
+  "words": 580,
+  "sources": [
+    { "title": "The Himalayan Times — Machhindranath chariot to be repaired", "url": "https://thehimalayantimes.com/kathmandu/machhindranath-chariot-to-be-repaired" },
+    { "title": "Nepali Times — Rain god in limbo", "url": "https://nepalitimes.com/rain-god-in-limbo" },
+    { "title": "Wikipedia — Rato Machindranath Jatra", "url": "https://en.wikipedia.org/wiki/Rato_Machindranath_Jatra" },
+    { "title": "Rubin Museum of Art — Here's What Happens At Nepal's Most Awe-Inspiring Chariot Procession", "url": "https://rubinmuseum.org/heres-what-happens-at-nepals-most-awe-inspiring-chariot-procession" }
+  ],
+  "model": "opencode-go/deepseek-v4.1-flash",
+  "job_id": "e68df3c5"
+}

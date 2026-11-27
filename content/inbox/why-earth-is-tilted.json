@@ -1,0 +1,16 @@
+{
+  "title": "Why Earth is tilted",
+  "summary": "Earth's axis leans about 23.44 degrees, most likely because of the giant impact that formed the Moon. The Moon now keeps the tilt stable, while it slowly cycles between 22.1 and 24.5 degrees.",
+  "category": "inbox",
+  "slug": "why-earth-is-tilted",
+  "date": "2026-11-27",
+  "words": 578,
+  "sources": [
+    { "title": "Encyclopaedia Britannica — Why Is Earth's Axis Tilted?", "url": "https://www.britannica.com/topic/Why-Is-Earths-Axis-Tilted" },
+    { "title": "NASA Science — Milankovitch (Orbital) Cycles and Their Role in Earth's Climate", "url": "https://science.nasa.gov/science-research/earth-science/milankovitch-orbital-cycles-and-their-role-in-earths-climate" },
+    { "title": "NASA Science — Moon Formation", "url": "https://science.nasa.gov/moon/formation" },
+    { "title": "Wikipedia — Axial tilt", "url": "https://en.wikipedia.org/wiki/Axial_tilt" }
+  ],
+  "model": "opencode-go/deepseek-v4.1-flash",
+  "job_id": "f7be1292"
+}
